@@ -3,52 +3,56 @@ import { Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
 import Avatar from './components/Avatar'
 import Settings from './components/Settings'
-import Quiz from './components/Quiz'
+import NewQuiz from './components/NewQuiz'
 import { persons } from './data/persons'
 import { updateUserState } from './services/apiService'
 
 function MainScreen() {
   const [greenlit, setGreenlit] = useState([])
   const [redlit, setRedlit] = useState([])
-  const currentUserId = 1 // Replace with actual current user ID
+  const currentUserId = 1
 
-  const handleClick = async (id) => {
+  const handleClick = async (id, action) => {
     let newGreenlit = [...greenlit]
     let newRedlit = [...redlit]
     let state = ''
 
-    if (greenlit.includes(id)) {
-      // Currently greenlit - switch to redlit
-      newGreenlit = greenlit.filter(gId => gId !== id)
-      newRedlit = [...redlit, id]
-      state = 'R'
-    } else if (redlit.includes(id)) {
-      // Currently redlit - switch to nothing
-      newRedlit = redlit.filter(rId => rId !== id)
-      state = ''
+    if (action === 'redlit') {
+      if (redlit.includes(id)) {
+        newRedlit = redlit.filter(rId => rId !== id)
+        state = ''
+      } else {
+        newRedlit = [...redlit, id]
+        newGreenlit = greenlit.filter(gId => gId !== id)
+        state = 'R'
+      }
     } else {
-      // Currently nothing - switch to greenlit
-      newGreenlit = [...greenlit, id]
-      newRedlit = redlit.filter(rId => rId !== id)
-      state = 'G'
+      if (greenlit.includes(id)) {
+        newGreenlit = greenlit.filter(gId => gId !== id)
+        state = ''
+      } else if (redlit.includes(id)) {
+        newRedlit = redlit.filter(rId => rId !== id)
+        state = ''
+      } else {
+        newGreenlit = [...greenlit, id]
+        newRedlit = redlit.filter(rId => rId !== id)
+        state = 'G'
+      }
     }
 
-		let ignoreServer = true;
-		if (ignoreServer) {
-			setGreenlit(newGreenlit)
-      setRedlit(newRedlit)
-		} else {
-    try {
-      await updateUserState(currentUserId, id, state)
+    let ignoreServer = true;
+    if (ignoreServer) {
       setGreenlit(newGreenlit)
       setRedlit(newRedlit)
-    } catch (error) {
-      console.error('Failed to update state:', error)
-      // Optionally show error message to user
-    }			
-		}
-		
-
+    } else {
+      try {
+        await updateUserState(currentUserId, id, state)
+        setGreenlit(newGreenlit)
+        setRedlit(newRedlit)
+      } catch (error) {
+        console.error('Failed to update state:', error)
+      }
+    }
   }
 
   return (
@@ -75,7 +79,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<MainScreen />} />
         <Route path="/settings" element={<Settings />} />
-        <Route path="/quiz" element={<Quiz />} />
+        <Route path="/quiz" element={<NewQuiz />} />
       </Routes>
     </div>
   )
